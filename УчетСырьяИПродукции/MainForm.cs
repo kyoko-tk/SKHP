@@ -140,14 +140,6 @@ namespace SQLiteViewer
             if (!tableNameMatch.Success) return;
             string tableName = tableNameMatch.Groups[1].Value;
 
-            var primaryKeyMatch = Regex.Match(tableSQL, @"PRIMARY KEY\s*\(`?(\w*id\w*)`?\)");
-            if (primaryKeyMatch.Success)
-            {
-                string pkField = $"{tableName}.{primaryKeyMatch.Groups[1].Value}";
-                primaryKeyIdFields.Add(pkField);
-                LogMessage($"Detected PRIMARY KEY: {pkField}");
-            }
-
             var foreignKeyMatches = Regex.Matches(tableSQL, @"FOREIGN KEY\s*\(`?(\w+)`?\)\s*REFERENCES\s+`?(\w+)`?\s*\(`?(\w+)`?\)");
             foreach (Match fkMatch in foreignKeyMatches)
             {
@@ -155,11 +147,13 @@ namespace SQLiteViewer
                 string referencedTable = fkMatch.Groups[2].Value;
                 string referencedColumn = fkMatch.Groups[3].Value;
 
+                // Добавляем в словарь: текущая таблица + столбец -> связанная таблица + колонка
                 string fkMapping = $"{tableName}.{foreignKeyColumn}";
                 mappings[fkMapping] = $"{referencedTable}.{referencedColumn}";
                 LogMessage($"Detected FOREIGN KEY mapping: {fkMapping} -> {referencedTable}.{referencedColumn}");
             }
         }
+
 
         private void LoadTableData(string tableName)
         {
@@ -176,66 +170,47 @@ namespace SQLiteViewer
                     dataGridView.DataSource = dataTable;
 
                     LogMessage($"Loaded data for table: {tableName}");
-                    HidePrimaryKeys(dataTable);
                 }
             }
         }
 
         private void HidePrimaryKeys(DataTable dataTable)
         {
-            if (!isAdmin)
+            foreach (DataColumn column in dataTable.Columns)
             {
-                foreach (DataColumn column in dataTable.Columns)
+                string fullColumnName = $"{dataTable.TableName}.{column.ColumnName}";
+                if (primaryKeyIdFields.Contains(fullColumnName) && !isAdmin)
                 {
-                    string fullColumnName = $"{dataTable.TableName}.{column.ColumnName}";
-                    if (primaryKeyIdFields.Contains(fullColumnName))
-                    {
-                        dataGridView.Columns[column.ColumnName].Visible = false;
-                        LogMessage($"Hiding column for non-admin: {fullColumnName}");
-                    }
+                    dataGridView.Columns[column.ColumnName].Visible = false;
+                    LogMessage($"Hiding column for non-admin: {fullColumnName}");
                 }
             }
         }
 
+
         private string BuildSelectQuery(string tableName)
         {
-            string query = $"SELECT ";
-            bool firstColumn = true;
+            string query = $"SELECT {tableName}.*";
             string joinClause = "";
 
             using (var connection = new SQLiteConnection(connectionString))
             {
                 connection.Open();
 
-                foreach (DataRow column in connection.GetSchema("Columns", new[] { null, null, tableName }).Rows)
+                foreach (var fkMapping in foreignKeyMappings)
                 {
-                    string columnName = column["COLUMN_NAME"].ToString();
-                    string fullColumnName = $"{tableName}.{columnName}";
-
-                    if (foreignKeyMappings.ContainsKey(fullColumnName))
+                    // Проверяем, относится ли внешний ключ к текущей таблице
+                    if (fkMapping.Key.StartsWith($"{tableName}."))
                     {
-                        var refInfo = foreignKeyMappings[fullColumnName].Split('.');
+                        var column = fkMapping.Key.Split('.')[1]; // Имя столбца внешнего ключа
+                        var refInfo = fkMapping.Value.Split('.'); // Разделяем на таблицу и столбец
                         string refTable = refInfo[0];
                         string refColumn = refInfo[1];
 
-                        // Добавляем столбец названия из связанной таблицы
-                        query += (firstColumn ? "" : ", ") +
-                                 $"{refTable}.Название AS `{columnName}_Name`";
-
-                        // Добавляем LEFT JOIN для связанной таблицы
-                        joinClause += $" LEFT JOIN {refTable} ON {tableName}.{columnName} = {refTable}.{refColumn}";
-                        LogMessage($"Adding JOIN for FOREIGN KEY: {tableName}.{columnName} -> {refTable}.{refColumn}");
+                        // Добавляем JOIN и столбец для отображения названия
+                        joinClause += $" LEFT JOIN {refTable} ON {tableName}.{column} = {refTable}.{refColumn}";
+                        query += $", {refTable}.Название AS `{column}_Name`";
                     }
-                    else if (!isAdmin && primaryKeyIdFields.Contains(fullColumnName))
-                    {
-                        LogMessage($"Skipping column for non-admin: {fullColumnName}");
-                        continue;
-                    }
-                    else
-                    {
-                        query += (firstColumn ? "" : ", ") + $"{tableName}.{columnName}";
-                    }
-                    firstColumn = false;
                 }
             }
 
