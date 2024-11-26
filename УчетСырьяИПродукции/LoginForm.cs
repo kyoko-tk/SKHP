@@ -9,12 +9,14 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static SQLiteViewer.MainForm;
 
 namespace SQLiteViewer
 {
     public partial class LoginForm : Form
     {
         private readonly string connectionString = "Data Source=DB.db;Version=3;";
+        public User AuthenticatedUser { get; private set; }
 
         public LoginForm()
         {

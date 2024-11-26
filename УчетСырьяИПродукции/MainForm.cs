@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -13,6 +14,8 @@ namespace SQLiteViewer
         private readonly string connectionString = "Data Source=DB.db;Version=3;";
         private bool isAdmin;
         private BindingSource bindingSource = new BindingSource();
+        private User CurrentUser { get; set; } // Хранит текущего авторизованного пользователя
+
 
         public MainForm(bool isAdmin)
         {
@@ -45,6 +48,44 @@ namespace SQLiteViewer
                 Log($"{message} | Exception: {ex.Message}");
             }
         }
+
+        private void LogChange(string tableName, int recordId, string fieldName, string oldValue, string newValue, string user)
+        {
+            try
+            {
+                using (var connection = new SQLiteConnection(connectionString))
+                {
+                    connection.Open();
+                    string query = @"
+                INSERT INTO ИсторияИзменений (Таблица, Запись_id, Поле, СтароеЗначение, НовоеЗначение, Пользователь)
+                VALUES (@tableName, @recordId, @fieldName, @oldValue, @newValue, @user)";
+
+                    using (var command = new SQLiteCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@tableName", tableName);
+                        command.Parameters.AddWithValue("@recordId", recordId);
+                        command.Parameters.AddWithValue("@fieldName", fieldName);
+                        command.Parameters.AddWithValue("@oldValue", oldValue ?? (object)DBNull.Value);
+                        command.Parameters.AddWithValue("@newValue", newValue ?? (object)DBNull.Value);
+                        command.Parameters.AddWithValue("@user", user);
+
+                        command.ExecuteNonQuery();
+                    }
+                }
+                Logger.Log($"Изменение зафиксировано: {tableName}, запись {recordId}, поле {fieldName}");
+            }
+            catch (Exception ex)
+            {
+                Logger.Log("Ошибка при записи в историю изменений", ex);
+            }
+        }
+
+        public class User
+        {
+            public string Username { get; set; }
+            public string Role { get; set; } // Например: "admin" или "user"
+        }
+
 
         private void LoadTables()
         {
@@ -117,6 +158,7 @@ namespace SQLiteViewer
                 }
 
                 LoadTableData(tableName);
+                bindingNavigator.Visible = true;
             }
         }
 
@@ -204,11 +246,14 @@ namespace SQLiteViewer
                         dataGridView.DataSource = bindingSource;
                         bindingNavigator.BindingSource = bindingSource;
 
-                        // Скрытие столбцов "_id"
-                        foreach (DataGridViewColumn column in dataGridView.Columns)
+                        // Скрытие столбцов "_id" только для пользователей без прав администратора
+                        if (!isAdmin)
                         {
-                            if (column.Name.EndsWith("_id", StringComparison.OrdinalIgnoreCase))
-                                column.Visible = false;
+                            foreach (DataGridViewColumn column in dataGridView.Columns)
+                            {
+                                if (column.Name.EndsWith("_id", StringComparison.OrdinalIgnoreCase))
+                                    column.Visible = false;
+                            }
                         }
                     }
                 }
@@ -219,7 +264,6 @@ namespace SQLiteViewer
                 MessageBox.Show($"Ошибка загрузки таблицы {tableName}. Проверьте логи для подробностей.");
             }
         }
-
 
         private void bindingNavigator1_RefreshItems(object sender, EventArgs e)
         {
@@ -303,7 +347,51 @@ namespace SQLiteViewer
 
         private void переподключитсяToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            try
+            {
+                // 1. Завершаем текущую сессию
+                Logger.Log("Отключение текущего пользователя...");
+                // Очистка данных сессии
+                CurrentUser = null; // Переменная, хранящая данные текущего пользователя
+                Logger.Log("Сессия успешно завершена.");
 
+                // 2. Показ формы входа
+                Logger.Log("Показываем форму авторизации...");
+                using (var loginForm = new LoginForm()) // Создаем экземпляр формы авторизации
+                {
+                    if (loginForm.ShowDialog() == DialogResult.OK)
+                    {
+                        // Получаем данные о новом пользователе
+                        CurrentUser = loginForm.AuthenticatedUser;
+                    }
+                    else
+                    {
+                        Logger.Log("Пользователь отменил авторизацию.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Логируем ошибки, если они возникли
+                Logger.Log($"Ошибка при переподключении: {ex.Message}");
+                MessageBox.Show("Произошла ошибка при попытке переподключения. Повторите попытку позже.",
+                                "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void выходToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private void печатьToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Coming soon...");
+        }
+
+        private void toolStripButtonSave_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Coming soon...");
         }
     }
 }
