@@ -5,13 +5,13 @@ using System.Windows.Forms;
 
 namespace SQLiteViewer
 {
-    public partial class AddRecordForm : Form
+    public partial class ContractForm : Form
     {
         private readonly string connectionString = "Data Source=DB.db;Version=3;";
         private DataTable suppliersTable;
         private DataTable customersTable;
 
-        public AddRecordForm()
+        public ContractForm()
         {
             InitializeComponent();
             LoadComboBoxData();
@@ -33,9 +33,17 @@ namespace SQLiteViewer
                     {
                         suppliersTable = new DataTable();
                         adapter.Fill(suppliersTable);
+
+                        // Добавляем пустую строку на первую позицию
+                        DataRow newRow = suppliersTable.NewRow();
+                        newRow["Поставщик_id"] = DBNull.Value;
+                        newRow["Название"] = "";  // Пустое название для первого элемента
+                        suppliersTable.Rows.InsertAt(newRow, 0);
+
                         comboBoxПоставщики.DataSource = suppliersTable;
                         comboBoxПоставщики.DisplayMember = "Название";
                         comboBoxПоставщики.ValueMember = "Поставщик_id";
+                        comboBoxПоставщики.SelectedIndex = 0; // Устанавливаем пустое значение по умолчанию
                     }
 
                     // Загрузка покупателей
@@ -45,9 +53,17 @@ namespace SQLiteViewer
                     {
                         customersTable = new DataTable();
                         adapter.Fill(customersTable);
+
+                        // Добавляем пустую строку на первую позицию
+                        DataRow newRow = customersTable.NewRow();
+                        newRow["Покупатель_id"] = DBNull.Value;
+                        newRow["Название"] = "";  // Пустое название для первого элемента
+                        customersTable.Rows.InsertAt(newRow, 0);
+
                         comboBoxПокупатели.DataSource = customersTable;
                         comboBoxПокупатели.DisplayMember = "Название";
                         comboBoxПокупатели.ValueMember = "Покупатель_id";
+                        comboBoxПокупатели.SelectedIndex = 0; // Устанавливаем пустое значение по умолчанию
                     }
                 }
             }
@@ -69,19 +85,27 @@ namespace SQLiteViewer
                     return;
                 }
 
-                // Получаем выбранные значения из ComboBox и проверяем их на null.
+                // Получаем выбранные значения из ComboBox
                 object selectedПоставщикId = comboBoxПоставщики.SelectedValue;
                 object selectedПокупательId = comboBoxПокупатели.SelectedValue;
 
-                if (selectedПоставщикId == null || selectedПокупательId == null)
+                // Если оба поля пусты, не разрешаем сохранение
+                if (selectedПоставщикId == DBNull.Value && selectedПокупательId == DBNull.Value)
                 {
-                    MessageBox.Show("Поставщик и Покупатель должны быть выбраны.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Необходимо выбрать либо поставщика, либо покупателя.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
-                // Преобразуем значения в целые числа
-                int поставщикId = Convert.ToInt32(selectedПоставщикId);
-                int покупательId = Convert.ToInt32(selectedПокупательId);
+                // Проверяем, что выбран только один из вариантов (либо поставщик, либо покупатель)
+                if (selectedПоставщикId != DBNull.Value && selectedПокупательId != DBNull.Value)
+                {
+                    MessageBox.Show("Вы можете выбрать только поставщика или покупателя, но не оба одновременно.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // Преобразуем значения в целые числа или DBNull
+                int? поставщикId = selectedПоставщикId != DBNull.Value ? Convert.ToInt32(selectedПоставщикId) : (int?)null;
+                int? покупательId = selectedПокупательId != DBNull.Value ? Convert.ToInt32(selectedПокупательId) : (int?)null;
 
                 // Преобразуем дату в строку формата "yyyy-MM-dd", чтобы сохранить только дату без времени
                 string датаЗаключения = dateTimePickerДатаЗаключения.Value.ToString("yyyy-MM-dd");
@@ -95,11 +119,11 @@ namespace SQLiteViewer
 
                     using (var command = new SQLiteCommand(query, connection))
                     {
-                        // Убедитесь, что параметры передаются корректно и в правильном формате
+                        // Устанавливаем параметры
                         command.Parameters.AddWithValue("@Номер", номер);
-                        command.Parameters.AddWithValue("@Поставщик_id", поставщикId);
-                        command.Parameters.AddWithValue("@Покупатель_id", покупательId);
-                        command.Parameters.AddWithValue("@ДатаЗаключения", датаЗаключения); // передаем строку с датой
+                        command.Parameters.AddWithValue("@Поставщик_id", поставщикId.HasValue ? поставщикId.Value : (object)DBNull.Value); // Если null, записываем DBNull
+                        command.Parameters.AddWithValue("@Покупатель_id", покупательId.HasValue ? покупательId.Value : (object)DBNull.Value); // Если null, записываем DBNull
+                        command.Parameters.AddWithValue("@ДатаЗаключения", датаЗаключения);
 
                         // Выполнение запроса
                         command.ExecuteNonQuery();
@@ -114,7 +138,6 @@ namespace SQLiteViewer
                 MessageBox.Show($"Ошибка при сохранении данных: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
 
         // Обработчик нажатия кнопки "Сохранить"
         private void btnSave_Click(object sender, EventArgs e)

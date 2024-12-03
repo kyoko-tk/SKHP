@@ -1,6 +1,6 @@
 ﻿namespace SQLiteViewer
 {
-    partial class AddRecordForm
+    partial class ContractForm
     {
         /// <summary>
         /// Required designer variable.
