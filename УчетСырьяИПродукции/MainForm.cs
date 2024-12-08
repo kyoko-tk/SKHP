@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
@@ -16,6 +17,7 @@ namespace SQLiteViewer
         private BindingSource bindingSource = new BindingSource();
         private User authenticatedUser;
         private ToolStripStatusLabel toolStripStatusLabelUser;
+        private Permissions permissions;  // Объект для разграничения прав
 
         public MainForm(bool isAdmin, User user)
         {
@@ -23,13 +25,17 @@ namespace SQLiteViewer
             this.isAdmin = isAdmin;
             this.bindingSource = new BindingSource();
             authenticatedUser = user; // Инициализация authenticatedUser
-            LoadTables();
+            permissions = Permissions.LoadPermissions(); // Загружаем настройки разграничения доступа
+            LoadTables();  // Загрузка таблиц
             toolStripStatusLabelUser = new ToolStripStatusLabel
             {
                 Name = "toolStripStatusLabelUser",
                 Text = "Пользователь: " + authenticatedUser.EmployeeName + " (" + authenticatedUser.Username + ")"
             };
             statusStrip1.Items.Add(toolStripStatusLabelUser);
+
+            // Применяем разграничение доступа
+            ApplyAccessControl();
         }
         public static class Logger
         {
@@ -117,6 +123,10 @@ namespace SQLiteViewer
                     recordsNode.Expand();
                     sysInfoNode.Expand();
                 }
+
+                // Применяем скрытые таблицы на основе разграничений
+                ApplyHiddenTables();
+
                 Logger.Log("Таблицы успешно загружены.");
             }
             catch (Exception ex)
@@ -125,6 +135,81 @@ namespace SQLiteViewer
             }
         }
 
+        private void ApplyAccessControl()
+        {
+            // Применяем видимость кнопок на основе разрешений
+            if (permissions.ButtonVisibility.ContainsKey(authenticatedUser.Username))
+            {
+                var buttonPermissions = permissions.ButtonVisibility[authenticatedUser.Username];
+                bindingNavigatorAddNewItem.Visible = buttonPermissions["canAdd"];
+                bindingNavigatorDelete.Visible = buttonPermissions["canDelete"];
+                toolStripButtonSave.Visible = buttonPermissions["canSave"];
+            }
+
+            // Скрыть раздел "Разграничение" для обычных пользователей
+            if (authenticatedUser.Role == "user")
+            {
+                разграничениеToolStripMenuItem.Visible = false;
+            }
+            else
+            {
+                разграничениеToolStripMenuItem.Visible = true;
+            }
+        }
+
+        private void ApplyHiddenTables()
+        {
+            // Применяем скрытие таблиц для текущего пользователя на основе permissions
+            if (permissions.HiddenTables.ContainsKey(authenticatedUser.Username))
+            {
+                var hiddenTables = permissions.HiddenTables[authenticatedUser.Username];
+
+                // Перебираем все узлы дерева и скрываем те, которые не доступны
+                foreach (TreeNode node in treeViewTables.Nodes)
+                {
+                    // Применяем скрытие для всех узлов, нужно привести коллекцию узлов к списку
+                    foreach (TreeNode tableNode in node.Nodes.Cast<TreeNode>().ToList())  // Используем Cast<TreeNode>() для приведения к List
+                    {
+                        // Если текущая таблица в списке скрытых, удаляем ее
+                        if (hiddenTables.Contains(tableNode.Text))
+                        {
+                            node.Nodes.Remove(tableNode);
+                        }
+                    }
+                }
+            }
+        }
+
+        public class Permissions
+        {
+            public Dictionary<string, List<string>> HiddenTables { get; set; }
+            public Dictionary<string, Dictionary<string, bool>> ButtonVisibility { get; set; }
+
+            private static string permissionsFilePath = "permissions.json";
+
+            public Permissions()
+            {
+                HiddenTables = new Dictionary<string, List<string>>();
+                ButtonVisibility = new Dictionary<string, Dictionary<string, bool>>();
+            }
+
+            public static Permissions LoadPermissions()
+            {
+                if (File.Exists(permissionsFilePath))
+                {
+                    var json = File.ReadAllText(permissionsFilePath);
+                    return JsonConvert.DeserializeObject<Permissions>(json);
+                }
+
+                return new Permissions(); // Возвращаем пустой объект, если файл не существует
+            }
+
+            public void SavePermissions()
+            {
+                var json = JsonConvert.SerializeObject(this, Formatting.Indented);
+                File.WriteAllText(permissionsFilePath, json);
+            }
+        }
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
@@ -141,6 +226,15 @@ namespace SQLiteViewer
                 if (e.Node.Parent.Text == "Справочники")
                 {
                     tableName = "с_" + tableName;
+                }
+
+                // Проверка, скрыта ли таблица для текущего пользователя
+                if (permissions.HiddenTables.ContainsKey(authenticatedUser.Username) &&
+                    permissions.HiddenTables[authenticatedUser.Username].Contains(tableName))
+                {
+                    // Если таблица скрыта для пользователя, прекращаем обработку
+                    MessageBox.Show("У вас нет доступа к этой таблице.", "Доступ запрещен", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
 
                 // Загрузка данных в таблицу
@@ -810,6 +904,29 @@ namespace SQLiteViewer
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка при выполнении поиска: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void разграничениеToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Проверяем роль пользователя
+                if (authenticatedUser.Role != "admin")
+                {
+                    MessageBox.Show("У вас нет прав доступа к админ-панели.", "Доступ запрещен", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Открываем форму админ-панели
+                using (var formAccessControl = new FormAccessControl())
+                {
+                    formAccessControl.ShowDialog();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Произошла ошибка при открытии админ-панели: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace УчетСырьяИПродукции.Properties {
+namespace SQLiteViewer.Properties {
     using System;
     
     
