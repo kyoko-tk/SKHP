@@ -335,17 +335,16 @@ namespace SQLiteViewer
         private void ReplaceForeignKeysWithNames(DataTable dataTable, SQLiteConnection connection)
         {
             // Карта соответствий столбец - таблица
-            var foreignKeyMap = new Dictionary<string, (string TableName, string NameColumn)>
+            var foreignKeyMap = new Dictionary<string, (string TableName, string KeyColumn, string NameColumn)>
     {
-        { "Поставщик_id", ("с_Поставщики", "Название") },
-        { "Покупатель_id", ("с_Покупатели", "Название") },
-        { "Договор_id", ("Договоры", "Номер") },
-        { "Склад_id", ("с_Склады", "Название") },
-        { "Сырье_id", ("с_Сырье", "Название") },
-        { "Подразделение_id", ("с_Подразделения", "Название") },
-        { "Заведующий_id", ("с_Сотрудники", "ФИО") },
-        { "Должность_id", ("с_Должности", "Название") }
-
+        { "Поставщик_id", ("с_Поставщики", "Поставщик_id", "Название") },
+        { "Покупатель_id", ("с_Покупатели", "Покупатель_id", "Название") },
+        { "Договор_id", ("Договоры", "Договор_id", "Номер") },
+        { "Склад_id", ("с_Склады", "Склад_id", "Название") },
+        { "Сырье_id", ("с_Сырье", "Сырье_id", "Название") },
+        { "Подразделение_id", ("с_Подразделения", "Подразделение_id", "Название") },
+        { "Заведующий_id", ("с_Сотрудники", "Сотрудник_id", "ФИО") },
+        { "Должность_id", ("с_Должности", "Должность_id", "Название") }
     };
 
             // Получение списка столбцов для обработки (без первого столбца)
@@ -357,11 +356,11 @@ namespace SQLiteViewer
 
             foreach (var foreignKeyColumn in columnsToProcess)
             {
-                var (relatedTableName, nameColumn) = foreignKeyMap[foreignKeyColumn];
+                var (relatedTableName, keyColumn, nameColumn) = foreignKeyMap[foreignKeyColumn];
 
                 // Создание словаря id -> название
                 var idToNameMap = new Dictionary<int, string>();
-                string query = $"SELECT {foreignKeyColumn}, {nameColumn} FROM \"{relatedTableName}\"";
+                string query = $"SELECT {keyColumn}, {nameColumn} FROM \"{relatedTableName}\"";
 
                 try
                 {
@@ -405,6 +404,7 @@ namespace SQLiteViewer
                 }
             }
         }
+
 
         private void LoadTableData(string tableName)
         {
