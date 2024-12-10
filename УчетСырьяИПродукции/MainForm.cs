@@ -514,14 +514,47 @@ namespace SQLiteViewer
                     {
                         LoadTableData(selectedTableName);
                     }
+                    return; // Уходим из метода, если таблица "Договоры"
                 }
-                else if (selectedTableName.Equals("Поставки", StringComparison.OrdinalIgnoreCase))
+
+                if (selectedTableName.Equals("Поставки", StringComparison.OrdinalIgnoreCase))
                 {
                     SupplyForm supplyForm = new SupplyForm();
                     if (supplyForm.ShowDialog() == DialogResult.OK)
                     {
                         LoadTableData(selectedTableName);
                     }
+                    return; // Уходим из метода, если таблица "Поставки"
+                }
+
+                if (selectedTableName.Equals("Перемещения", StringComparison.OrdinalIgnoreCase))
+                {
+                    MovementForm movementForm = new MovementForm();
+                    if (movementForm.ShowDialog() == DialogResult.OK)
+                    {
+                        LoadTableData(selectedTableName);
+                    }
+                    return; // Уходим из метода, если таблица "Перемещения"
+                }
+
+                if (selectedTableName.Equals("Переработка", StringComparison.OrdinalIgnoreCase))
+                {
+                    ReprocessingForm reprocessingForm = new ReprocessingForm();
+                    if (reprocessingForm.ShowDialog() == DialogResult.OK)
+                    {
+                        LoadTableData(selectedTableName);
+                    }
+                    return; // Уходим из метода, если таблица "Переработка"
+                }
+
+                if (selectedTableName.Equals("Выбытие", StringComparison.OrdinalIgnoreCase))
+                {
+                    WriteOffForm writeOffForm = new WriteOffForm();
+                    if (writeOffForm.ShowDialog() == DialogResult.OK)
+                    {
+                        LoadTableData(selectedTableName);
+                    }
+                    return;
                 }
                 else
                 {
@@ -548,7 +581,7 @@ namespace SQLiteViewer
                                 foreach (var column in columns)
                                 {
                                     // Задаем значения по умолчанию для каждого столбца
-                                    object defaultValue = GetDefaultValueForColumn(column); // Метод для получения значения по умолчанию для конкретного столбца
+                                    object defaultValue = GetDefaultValueForColumn(column);  // Метод для получения значения по умолчанию для конкретного столбца
                                     command.Parameters.AddWithValue($"@default_{column}", defaultValue ?? DBNull.Value);
                                 }
 
@@ -562,7 +595,7 @@ namespace SQLiteViewer
                     File.Delete(tempDatabase);
 
                     LoadTableData(selectedTableName);
-                    MessageBox.Show("Запись с значениями по умолчанию успешно добавлена.", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Запись успешно добавлена.", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)
@@ -725,10 +758,18 @@ namespace SQLiteViewer
                         {
                             if (row.RowState == DataRowState.Modified)
                             {
-                                string setClause = string.Join(", ",
-                                    row.Table.Columns.Cast<DataColumn>()
-                                        .Where(c => !c.ColumnName.EndsWith("_id"))
-                                        .Select(c => $"{c.ColumnName} = @{c.ColumnName}"));
+                                // Исключаем столбцы, которые были добавлены для замены внешних ключей
+                                var columnsToUpdate = row.Table.Columns.Cast<DataColumn>()
+                                    .Where(c => !c.ColumnName.EndsWith("_id") && !dataTable.Columns.Contains(c.ColumnName.Replace("_id", "")))
+                                    .Select(c => $"{c.ColumnName} = @{c.ColumnName}")
+                                    .ToList();
+
+                                if (!columnsToUpdate.Any())
+                                {
+                                    continue; // Пропускаем обновление, если нет столбцов для обновления
+                                }
+
+                                string setClause = string.Join(", ", columnsToUpdate);
 
                                 string idColumnName = row.Table.Columns.Cast<DataColumn>()
                                     .FirstOrDefault(c => c.ColumnName.EndsWith("_id"))?.ColumnName;
@@ -1001,7 +1042,15 @@ namespace SQLiteViewer
                 {
                     // Сбрасываем фильтр и загружаем данные
                     bindingSource.Filter = null;
-                    LoadTableData(GetSelectedTableName());
+                    string selectedTableName = GetSelectedTableName();
+
+                    // Проверяем, является ли выбранная таблица справочником
+                    if (IsDictionaryTable())
+                    {
+                        selectedTableName = "с_" + selectedTableName; // Добавляем префикс "с_" для справочников
+                    }
+
+                    LoadTableData(selectedTableName);
                 }
                 catch (Exception ex)
                 {

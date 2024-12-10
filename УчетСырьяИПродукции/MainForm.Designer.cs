@@ -28,8 +28,8 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.менюToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.переподключитсяToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.выходToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.разграничениеToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.выходToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripTextBox1 = new System.Windows.Forms.ToolStripTextBox();
             this.bindingNavigator = new System.Windows.Forms.BindingNavigator(this.components);
             this.bindingNavigatorAddNewItem = new System.Windows.Forms.ToolStripButton();
@@ -132,8 +132,8 @@
             // 
             this.менюToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.переподключитсяToolStripMenuItem,
-            this.выходToolStripMenuItem1,
-            this.разграничениеToolStripMenuItem});
+            this.разграничениеToolStripMenuItem,
+            this.выходToolStripMenuItem1});
             this.менюToolStripMenuItem.Name = "менюToolStripMenuItem";
             this.менюToolStripMenuItem.Size = new System.Drawing.Size(65, 27);
             this.менюToolStripMenuItem.Text = "Меню";
@@ -145,19 +145,19 @@
             this.переподключитсяToolStripMenuItem.Text = "Переподключится";
             this.переподключитсяToolStripMenuItem.Click += new System.EventHandler(this.переподключитсяToolStripMenuItem_Click);
             // 
-            // выходToolStripMenuItem1
-            // 
-            this.выходToolStripMenuItem1.Name = "выходToolStripMenuItem1";
-            this.выходToolStripMenuItem1.Size = new System.Drawing.Size(256, 26);
-            this.выходToolStripMenuItem1.Text = "Вы&ход";
-            this.выходToolStripMenuItem1.Click += new System.EventHandler(this.выходToolStripMenuItem1_Click);
-            // 
             // разграничениеToolStripMenuItem
             // 
             this.разграничениеToolStripMenuItem.Name = "разграничениеToolStripMenuItem";
             this.разграничениеToolStripMenuItem.Size = new System.Drawing.Size(256, 26);
             this.разграничениеToolStripMenuItem.Text = "Разграничение доступа";
             this.разграничениеToolStripMenuItem.Click += new System.EventHandler(this.разграничениеToolStripMenuItem_Click);
+            // 
+            // выходToolStripMenuItem1
+            // 
+            this.выходToolStripMenuItem1.Name = "выходToolStripMenuItem1";
+            this.выходToolStripMenuItem1.Size = new System.Drawing.Size(256, 26);
+            this.выходToolStripMenuItem1.Text = "Вы&ход";
+            this.выходToolStripMenuItem1.Click += new System.EventHandler(this.выходToolStripMenuItem1_Click);
             // 
             // toolStripTextBox1
             // 
