@@ -27,7 +27,7 @@
             this.textBoxНомер = new System.Windows.Forms.TextBox();
             this.comboBoxПоставщики = new System.Windows.Forms.ComboBox();
             this.comboBoxПокупатели = new System.Windows.Forms.ComboBox();
-            this.dateTimePickerДатаЗаключения = new System.Windows.Forms.DateTimePicker();
+            this.dateTimePickerДата = new System.Windows.Forms.DateTimePicker();
             this.btnSave = new System.Windows.Forms.Button();
             this.labelНомер = new System.Windows.Forms.Label();
             this.labelПоставщик = new System.Windows.Forms.Label();
@@ -62,10 +62,10 @@
             // 
             // dateTimePickerДатаЗаключения
             // 
-            this.dateTimePickerДатаЗаключения.Location = new System.Drawing.Point(150, 150);
-            this.dateTimePickerДатаЗаключения.Name = "dateTimePickerДатаЗаключения";
-            this.dateTimePickerДатаЗаключения.Size = new System.Drawing.Size(200, 22);
-            this.dateTimePickerДатаЗаключения.TabIndex = 3;
+            this.dateTimePickerДата.Location = new System.Drawing.Point(150, 150);
+            this.dateTimePickerДата.Name = "dateTimePickerДатаЗаключения";
+            this.dateTimePickerДата.Size = new System.Drawing.Size(200, 22);
+            this.dateTimePickerДата.TabIndex = 3;
             // 
             // btnSave
             // 
@@ -121,7 +121,7 @@
             this.Controls.Add(this.labelПоставщик);
             this.Controls.Add(this.labelНомер);
             this.Controls.Add(this.btnSave);
-            this.Controls.Add(this.dateTimePickerДатаЗаключения);
+            this.Controls.Add(this.dateTimePickerДата);
             this.Controls.Add(this.comboBoxПокупатели);
             this.Controls.Add(this.comboBoxПоставщики);
             this.Controls.Add(this.textBoxНомер);
@@ -137,7 +137,7 @@
         private System.Windows.Forms.TextBox textBoxНомер;
         private System.Windows.Forms.ComboBox comboBoxПоставщики;
         private System.Windows.Forms.ComboBox comboBoxПокупатели;
-        private System.Windows.Forms.DateTimePicker dateTimePickerДатаЗаключения;
+        private System.Windows.Forms.DateTimePicker dateTimePickerДата;
         private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.Label labelНомер;
         private System.Windows.Forms.Label labelПоставщик;

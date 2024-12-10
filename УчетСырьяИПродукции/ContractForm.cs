@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.SQLite;
+using System.IO;
 using System.Windows.Forms;
 
 namespace SQLiteViewer
@@ -108,30 +109,42 @@ namespace SQLiteViewer
                 int? покупательId = selectedПокупательId != DBNull.Value ? Convert.ToInt32(selectedПокупательId) : (int?)null;
 
                 // Преобразуем дату в строку формата "yyyy-MM-dd", чтобы сохранить только дату без времени
-                string датаЗаключения = dateTimePickerДатаЗаключения.Value.ToString("yyyy-MM-dd");
+                string дата = dateTimePickerДата.Value.ToString("yyyy-MM-dd");
 
-                using (var connection = new SQLiteConnection(connectionString))
+                // Создаем временную базу данных
+                string tempDatabase = "temp.db";
+                File.Copy("DB.db", tempDatabase, true);
+
+                // Используем временную базу данных для внесения изменений
+                using (var connection = new SQLiteConnection($"Data Source={tempDatabase};Version=3;"))
                 {
                     connection.Open();
 
-                    string query = "INSERT INTO Договоры (Номер, Поставщик_id, Покупатель_id, ДатаЗаключения) " +
-                                   "VALUES (@Номер, @Поставщик_id, @Покупатель_id, @ДатаЗаключения)";
+                    string query = "INSERT INTO Договоры (Номер, Поставщик_id, Покупатель_id, Дата) " +
+                                   "VALUES (@Номер, @Поставщик_id, @Покупатель_id, @Дата)";
 
                     using (var command = new SQLiteCommand(query, connection))
                     {
                         // Устанавливаем параметры
                         command.Parameters.AddWithValue("@Номер", номер);
-                        command.Parameters.AddWithValue("@Поставщик_id", поставщикId.HasValue ? поставщикId.Value : (object)DBNull.Value); // Если null, записываем DBNull
-                        command.Parameters.AddWithValue("@Покупатель_id", покупательId.HasValue ? покупательId.Value : (object)DBNull.Value); // Если null, записываем DBNull
-                        command.Parameters.AddWithValue("@ДатаЗаключения", датаЗаключения);
+                        command.Parameters.AddWithValue("@Поставщик_id", поставщикId.HasValue ? поставщикId.Value : (object)DBNull.Value);
+                        command.Parameters.AddWithValue("@Покупатель_id", покупательId.HasValue ? покупательId.Value : (object)DBNull.Value);
+                        command.Parameters.AddWithValue("@Дата", дата);
 
                         // Выполнение запроса
                         command.ExecuteNonQuery();
                     }
+
+                    connection.Close();
                 }
+
+                // Если все прошло успешно, заменяем оригинальную базу на временную
+                File.Copy(tempDatabase, "DB.db", true);
+                File.Delete(tempDatabase); // Удаляем временную базу данных
 
                 MessageBox.Show("Запись успешно добавлена.", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 this.Close(); // Закрыть форму после успешного добавления
+
             }
             catch (Exception ex)
             {

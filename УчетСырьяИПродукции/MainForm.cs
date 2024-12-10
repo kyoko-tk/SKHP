@@ -119,6 +119,7 @@ namespace SQLiteViewer
                     sysInfoNode.Expand();
 
                     Logger.Log("Таблицы успешно загружены.");
+                    connection.Close();
                 }
 
                 ApplyHiddenTables(); // Применяем скрытие таблиц
@@ -344,6 +345,10 @@ namespace SQLiteViewer
         { "Сырье_id", ("с_Сырье", "Сырье_id", "Название") },
         { "Подразделение_id", ("с_Подразделения", "Подразделение_id", "Название") },
         { "Заведующий_id", ("с_Сотрудники", "Сотрудник_id", "ФИО") },
+        { "СоСклада_id", ("с_Склады", "Склад_id", "Название") },
+        { "НаСклад_id", ("с_Склады", "Склад_id", "Название") },
+        { "МестоПереработки_id", ("с_Склады", "Склад_id", "Название") },
+        { "Продукция_id", ("с_Продукция", "Продукция_id", "Название") },
         { "Должность_id", ("с_Должности", "Должность_id", "Название") }
     };
 
@@ -493,48 +498,71 @@ namespace SQLiteViewer
         {
             try
             {
-                // Получаем имя выбранной таблицы
                 string selectedTableName = GetSelectedTableName();
                 if (string.IsNullOrEmpty(selectedTableName)) return;
 
-                // Если таблица "Договоры", открываем специальное окно для договоров
+                // Проверяем, является ли выбранная таблица справочником
+                if (IsDictionaryTable())
+                {
+                    selectedTableName = "с_" + selectedTableName; // Добавляем префикс "с_" для справочников
+                }
+
                 if (selectedTableName.Equals("Договоры", StringComparison.OrdinalIgnoreCase))
                 {
                     ContractForm contractForm = new ContractForm();
                     if (contractForm.ShowDialog() == DialogResult.OK)
                     {
-                        // Перезагружаем данные после добавления записи
                         LoadTableData(selectedTableName);
                     }
                 }
-                // Если таблица "Поставки", открываем специальное окно для поставок
                 else if (selectedTableName.Equals("Поставки", StringComparison.OrdinalIgnoreCase))
                 {
                     SupplyForm supplyForm = new SupplyForm();
                     if (supplyForm.ShowDialog() == DialogResult.OK)
                     {
-                        // Перезагружаем данные после добавления записи
                         LoadTableData(selectedTableName);
                     }
                 }
-                // Для всех остальных таблиц (кроме "Договоры" и "Поставки")
                 else
                 {
-                    // Получаем источник данных
-                    var dataTable = (DataTable)bindingSource.DataSource;
-                    if (dataTable == null)
+                    string tempDatabase = "temp.db";
+                    File.Copy("DB.db", tempDatabase, true);
+
+                    using (var tempConnection = new SQLiteConnection($"Data Source={tempDatabase};Version=3;"))
                     {
-                        MessageBox.Show("Источник данных не найден для текущей таблицы.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
+                        tempConnection.Open();
+                        using (var transaction = tempConnection.BeginTransaction())
+                        {
+                            // Получаем все столбцы, исключая первый (обычно это идентификатор с AUTOINCREMENT)
+                            var columns = GetTableColumns(selectedTableName).ToList();
+                            string firstColumn = columns.First(); // Первый столбец (идентификатор)
+                            columns.RemoveAt(0); // Удаляем первый столбец из списка, чтобы база сама его заполнила
+
+                            string columnNames = string.Join(", ", columns);
+                            string valuePlaceholders = string.Join(", ", columns.Select(c => $"@default_{c}"));
+
+                            string query = $"INSERT INTO \"{selectedTableName}\" ({columnNames}) VALUES ({valuePlaceholders});";
+
+                            using (var command = new SQLiteCommand(query, tempConnection, transaction))
+                            {
+                                foreach (var column in columns)
+                                {
+                                    // Задаем значения по умолчанию для каждого столбца
+                                    object defaultValue = GetDefaultValueForColumn(column); // Метод для получения значения по умолчанию для конкретного столбца
+                                    command.Parameters.AddWithValue($"@default_{column}", defaultValue ?? DBNull.Value);
+                                }
+
+                                command.ExecuteNonQuery();
+                            }
+                            transaction.Commit();
+                        }
                     }
 
-                    // Добавляем новую пустую строку
-                    DataRow newRow = dataTable.NewRow();
-                    dataTable.Rows.Add(newRow);
+                    File.Copy(tempDatabase, "DB.db", true);
+                    File.Delete(tempDatabase);
 
-                    // Сохраняем изменения, если необходимо
-                    bindingSource.EndEdit();
-                    MessageBox.Show("Пустая строка успешно добавлена.", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    LoadTableData(selectedTableName);
+                    MessageBox.Show("Запись с значениями по умолчанию успешно добавлена.", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)
@@ -543,6 +571,41 @@ namespace SQLiteViewer
             }
         }
 
+        // Метод для получения списка столбцов таблицы
+        private IEnumerable<string> GetTableColumns(string tableName)
+        {
+            using (var connection = new SQLiteConnection($"Data Source=DB.db;Version=3;"))
+            {
+                connection.Open();
+                var query = $"PRAGMA table_info({tableName});";
+                using (var command = new SQLiteCommand(query, connection))
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        yield return reader["name"].ToString();
+                    }
+                }
+            }
+        }
+
+        // Метод для получения значения по умолчанию для столбца
+        private object GetDefaultValueForColumn(string columnName)
+        {
+            // Логика для возврата значений по умолчанию, например:
+            if (columnName.EndsWith("_id"))
+            {
+                return 0; // Для идентификаторов по умолчанию будет 0
+            }
+            else if (columnName.Contains("date"))
+            {
+                return DBNull.Value; // Для дат можно возвращать DBNull
+            }
+            else
+            {
+                return ""; // Для строк возвращаем пустую строку
+            }
+        }
 
         private void toolStripRefreshButton_Click(object sender, EventArgs e)
         {
@@ -631,7 +694,6 @@ namespace SQLiteViewer
         {
             try
             {
-                // Получаем имя выбранной таблицы
                 string selectedTableName = GetSelectedTableName();
                 if (string.IsNullOrEmpty(selectedTableName))
                 {
@@ -639,40 +701,65 @@ namespace SQLiteViewer
                     return;
                 }
 
-                // Получаем DataTable из BindingSource
-                var dataTable = (DataTable)bindingSource.DataSource;
-                if (dataTable == null)
+                // Проверяем, является ли выбранная таблица справочником
+                if (IsDictionaryTable())
                 {
-                    MessageBox.Show("Ошибка: данные не найдены.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    selectedTableName = "с_" + selectedTableName; // Добавляем префикс "с_" для справочников
+                }
+
+                if (!(bindingSource.DataSource is DataTable dataTable))
+                {
+                    MessageBox.Show("Источник данных не найден.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                bool anyChanges = false;
+                string tempDatabase = "temp.db";
+                File.Copy("DB.db", tempDatabase, true);
 
-                // Перебираем строки, обрабатываем только изменённые
-                foreach (DataRow row in dataTable.Rows)
+                using (var tempConnection = new SQLiteConnection($"Data Source={tempDatabase};Version=3;"))
                 {
-                    if (row.RowState == DataRowState.Modified) // Только изменённые строки
+                    tempConnection.Open();
+                    using (var transaction = tempConnection.BeginTransaction())
                     {
-                        anyChanges = true;
-                        SaveRowToSQLite(selectedTableName, row);
+                        foreach (DataRow row in dataTable.Rows)
+                        {
+                            if (row.RowState == DataRowState.Modified)
+                            {
+                                string setClause = string.Join(", ",
+                                    row.Table.Columns.Cast<DataColumn>()
+                                        .Where(c => !c.ColumnName.EndsWith("_id"))
+                                        .Select(c => $"{c.ColumnName} = @{c.ColumnName}"));
+
+                                string idColumnName = row.Table.Columns.Cast<DataColumn>()
+                                    .FirstOrDefault(c => c.ColumnName.EndsWith("_id"))?.ColumnName;
+
+                                string updateQuery = $"UPDATE \"{selectedTableName}\" SET {setClause} WHERE {idColumnName} = @{idColumnName}";
+
+                                using (var command = new SQLiteCommand(updateQuery, tempConnection, transaction))
+                                {
+                                    foreach (DataColumn column in row.Table.Columns)
+                                    {
+                                        object value = column.ColumnName.EndsWith("_id")
+                                            ? row[column, DataRowVersion.Original]
+                                            : row[column];
+                                        command.Parameters.AddWithValue($"@{column.ColumnName}", value ?? DBNull.Value);
+                                    }
+                                    command.ExecuteNonQuery();
+                                }
+                            }
+                        }
+                        transaction.Commit();
                     }
                 }
 
-                // Подтверждаем изменения
-                if (anyChanges)
-                {
-                    dataTable.AcceptChanges(); // Подтверждаем изменения в DataTable
-                    MessageBox.Show("Изменения успешно сохранены.", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                {
-                    MessageBox.Show("Нет изменений для сохранения.", "Информация", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
+                File.Copy(tempDatabase, "DB.db", true);
+                File.Delete(tempDatabase);
+
+                dataTable.AcceptChanges();
+                MessageBox.Show("Изменения успешно сохранены.", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                Logger.Log("Ошибка при сохранении данных", ex);
                 MessageBox.Show($"Ошибка при сохранении данных: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -719,6 +806,7 @@ namespace SQLiteViewer
                             throw new Exception($"Не удалось обновить запись ID = {row[idColumnName]}.");
                         }
                     }
+                    connection.Close();
                 }
             }
             catch (Exception ex)
@@ -732,7 +820,6 @@ namespace SQLiteViewer
         {
             try
             {
-                // Проверяем, выбрана ли таблица
                 string selectedTableName = GetSelectedTableName();
                 if (string.IsNullOrEmpty(selectedTableName))
                 {
@@ -740,17 +827,18 @@ namespace SQLiteViewer
                     return;
                 }
 
-                // Проверяем, выбрана ли строка в DataGridView
+                // Проверяем, является ли выбранная таблица справочником
+                if (IsDictionaryTable())
+                {
+                    selectedTableName = "с_" + selectedTableName; // Добавляем префикс "с_" для справочников
+                }
+
                 if (dataGridView.CurrentRow == null || dataGridView.CurrentRow.IsNewRow)
                 {
                     MessageBox.Show("Выберите строку для удаления.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                // Получаем выбранную строку
-                var selectedRow = dataGridView.CurrentRow;
-
-                // Проверяем наличие первичного ключа
                 string idColumnName = dataGridView.Columns.Cast<DataGridViewColumn>()
                     .FirstOrDefault(c => c.Name.EndsWith("_id", StringComparison.OrdinalIgnoreCase))?.Name;
 
@@ -760,65 +848,35 @@ namespace SQLiteViewer
                     return;
                 }
 
-                if (selectedRow.Cells[idColumnName].Value == DBNull.Value)
+                int recordId = Convert.ToInt32(dataGridView.CurrentRow.Cells[idColumnName].Value);
+
+                string tempDatabase = "temp.db";
+                File.Copy("DB.db", tempDatabase, true);
+
+                using (var tempConnection = new SQLiteConnection($"Data Source={tempDatabase};Version=3;"))
                 {
-                    MessageBox.Show("Невозможно удалить строку без идентификатора.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                int recordId = Convert.ToInt32(selectedRow.Cells[idColumnName].Value);
-
-                // Подтверждаем удаление
-                var result = MessageBox.Show("Вы уверены, что хотите удалить эту запись?", "Подтверждение удаления", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (result != DialogResult.Yes) return;
-
-                // Удаление из базы данных
-                using (var connection = new SQLiteConnection(connectionString))
-                {
-                    connection.Open();
-
-                    string query = $"DELETE FROM \"{selectedTableName}\" WHERE {idColumnName} = @recordId";
-                    using (var command = new SQLiteCommand(query, connection))
+                    tempConnection.Open();
+                    using (var transaction = tempConnection.BeginTransaction())
                     {
-                        command.Parameters.AddWithValue("@recordId", recordId);
-                        command.ExecuteNonQuery();
-                    }
-                }
-
-                // Удаление из DataTable
-                var dataTable = (DataTable)bindingSource.DataSource;
-
-                if (dataTable.PrimaryKey.Length == 0)
-                {
-                    // Если первичный ключ не установлен, удаляем строку по значению ID
-                    foreach (DataRow row in dataTable.Rows)
-                    {
-                        if (row[idColumnName] != DBNull.Value && Convert.ToInt32(row[idColumnName]) == recordId)
+                        string query = $"DELETE FROM \"{selectedTableName}\" WHERE {idColumnName} = @recordId";
+                        using (var command = new SQLiteCommand(query, tempConnection, transaction))
                         {
-                            row.Delete();
-                            break;
+                            command.Parameters.AddWithValue("@recordId", recordId);
+                            command.ExecuteNonQuery();
                         }
-                    }
-                }
-                else
-                {
-                    // Если первичный ключ установлен
-                    var rowToDelete = dataTable.Rows.Find(recordId);
-                    if (rowToDelete != null)
-                    {
-                        rowToDelete.Delete();
+                        transaction.Commit();
                     }
                 }
 
-                dataTable.AcceptChanges();
+                File.Copy(tempDatabase, "DB.db", true);
+                File.Delete(tempDatabase);
 
+                LoadTableData(selectedTableName);
                 MessageBox.Show("Запись успешно удалена.", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                Logger.Log($"Запись с ID {recordId} успешно удалена из таблицы {selectedTableName}.");
             }
             catch (Exception ex)
             {
-                Logger.Log($"Ошибка при удалении записи: {ex.Message}", ex);
-                MessageBox.Show($"Произошла ошибка при удалении записи: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Ошибка при удалении записи: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
