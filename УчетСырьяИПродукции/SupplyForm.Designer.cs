@@ -24,6 +24,7 @@
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SupplyForm));
             this.comboBoxПоставщик = new System.Windows.Forms.ComboBox();
             this.comboBoxСклад = new System.Windows.Forms.ComboBox();
             this.comboBoxСырье = new System.Windows.Forms.ComboBox();
@@ -144,6 +145,7 @@
             this.Controls.Add(this.comboBoxСырье);
             this.Controls.Add(this.comboBoxСклад);
             this.Controls.Add(this.comboBoxПоставщик);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "SupplyForm";
             this.Text = "Добавить поставку";
             this.ResumeLayout(false);

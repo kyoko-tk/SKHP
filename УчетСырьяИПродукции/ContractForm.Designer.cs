@@ -24,6 +24,7 @@
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ContractForm));
             this.textBoxНомер = new System.Windows.Forms.TextBox();
             this.comboBoxПоставщики = new System.Windows.Forms.ComboBox();
             this.comboBoxПокупатели = new System.Windows.Forms.ComboBox();
@@ -60,10 +61,10 @@
             this.comboBoxПокупатели.Size = new System.Drawing.Size(200, 24);
             this.comboBoxПокупатели.TabIndex = 2;
             // 
-            // dateTimePickerДатаЗаключения
+            // dateTimePickerДата
             // 
             this.dateTimePickerДата.Location = new System.Drawing.Point(150, 150);
-            this.dateTimePickerДата.Name = "dateTimePickerДатаЗаключения";
+            this.dateTimePickerДата.Name = "dateTimePickerДата";
             this.dateTimePickerДата.Size = new System.Drawing.Size(200, 22);
             this.dateTimePickerДата.TabIndex = 3;
             // 
@@ -113,7 +114,7 @@
             this.labelДатаЗаключения.TabIndex = 8;
             this.labelДатаЗаключения.Text = "Дата заключения:";
             // 
-            // AddRecordForm
+            // ContractForm
             // 
             this.ClientSize = new System.Drawing.Size(384, 241);
             this.Controls.Add(this.labelДатаЗаключения);
@@ -125,7 +126,8 @@
             this.Controls.Add(this.comboBoxПокупатели);
             this.Controls.Add(this.comboBoxПоставщики);
             this.Controls.Add(this.textBoxНомер);
-            this.Name = "AddRecordForm";
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Name = "ContractForm";
             this.Text = "Добавить запись в договор";
             this.ResumeLayout(false);
             this.PerformLayout();

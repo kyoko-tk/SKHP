@@ -28,6 +28,7 @@
         // Инициализация компонентов
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ReprocessingForm));
             this.comboBoxRawMaterial = new System.Windows.Forms.ComboBox();
             this.comboBoxFromWarehouse = new System.Windows.Forms.ComboBox();
             this.comboBoxToProduct = new System.Windows.Forms.ComboBox();
@@ -149,6 +150,7 @@
             this.Controls.Add(this.comboBoxToProduct);
             this.Controls.Add(this.comboBoxFromWarehouse);
             this.Controls.Add(this.comboBoxRawMaterial);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "ReprocessingForm";
             this.Text = "Переработка";
             this.ResumeLayout(false);

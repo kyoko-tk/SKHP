@@ -29,8 +29,8 @@
             this.менюToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.переподключитсяToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.разграничениеToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.выходToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.управлениеПользоватеямиToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.выходToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripTextBox1 = new System.Windows.Forms.ToolStripTextBox();
             this.bindingNavigator = new System.Windows.Forms.BindingNavigator(this.components);
             this.bindingNavigatorAddNewItem = new System.Windows.Forms.ToolStripButton();
@@ -155,13 +155,6 @@
             this.разграничениеToolStripMenuItem.Visible = false;
             this.разграничениеToolStripMenuItem.Click += new System.EventHandler(this.разграничениеToolStripMenuItem_Click);
             // 
-            // выходToolStripMenuItem1
-            // 
-            this.выходToolStripMenuItem1.Name = "выходToolStripMenuItem1";
-            this.выходToolStripMenuItem1.Size = new System.Drawing.Size(289, 26);
-            this.выходToolStripMenuItem1.Text = "Вы&ход";
-            this.выходToolStripMenuItem1.Click += new System.EventHandler(this.выходToolStripMenuItem1_Click);
-            // 
             // управлениеПользоватеямиToolStripMenuItem
             // 
             this.управлениеПользоватеямиToolStripMenuItem.Name = "управлениеПользоватеямиToolStripMenuItem";
@@ -169,6 +162,13 @@
             this.управлениеПользоватеямиToolStripMenuItem.Text = "Управление пользоватеями";
             this.управлениеПользоватеямиToolStripMenuItem.Visible = false;
             this.управлениеПользоватеямиToolStripMenuItem.Click += new System.EventHandler(this.управлениеПользоватеямиToolStripMenuItem_Click);
+            // 
+            // выходToolStripMenuItem1
+            // 
+            this.выходToolStripMenuItem1.Name = "выходToolStripMenuItem1";
+            this.выходToolStripMenuItem1.Size = new System.Drawing.Size(289, 26);
+            this.выходToolStripMenuItem1.Text = "Вы&ход";
+            this.выходToolStripMenuItem1.Click += new System.EventHandler(this.выходToolStripMenuItem1_Click);
             // 
             // toolStripTextBox1
             // 
@@ -380,6 +380,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1074, 531);
             this.Controls.Add(this.splitContainer);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
             this.Text = "SQLite Viewer";

@@ -17,6 +17,7 @@ namespace SQLiteViewer
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormAccessControl));
             this.comboBoxUsers = new System.Windows.Forms.ComboBox();
             this.listBoxTables = new System.Windows.Forms.ListBox();
             this.checkBoxCanAdd = new System.Windows.Forms.CheckBox();
@@ -93,6 +94,7 @@ namespace SQLiteViewer
             this.Controls.Add(this.checkBoxCanAdd);
             this.Controls.Add(this.listBoxTables);
             this.Controls.Add(this.comboBoxUsers);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FormAccessControl";
             this.Text = "Access Control";
             this.ResumeLayout(false);

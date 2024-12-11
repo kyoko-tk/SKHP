@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MovementForm));
             this.comboBoxFromWarehouse = new System.Windows.Forms.ComboBox();
             this.comboBoxToWarehouse = new System.Windows.Forms.ComboBox();
             this.comboBoxRawMaterial = new System.Windows.Forms.ComboBox();
@@ -131,6 +132,7 @@
             this.Controls.Add(this.comboBoxRawMaterial);
             this.Controls.Add(this.comboBoxToWarehouse);
             this.Controls.Add(this.comboBoxFromWarehouse);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MovementForm";
             this.Text = "Перемещение сырья";
             this.ResumeLayout(false);

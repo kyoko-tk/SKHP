@@ -35,8 +35,11 @@ namespace SQLiteViewer
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UserManagementForm));
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabAddUser = new System.Windows.Forms.TabPage();
+            this.label1 = new System.Windows.Forms.Label();
+            this.comboBoxRole = new System.Windows.Forms.ComboBox();
             this.labelFullName = new System.Windows.Forms.Label();
             this.textBoxFullName = new System.Windows.Forms.TextBox();
             this.labelUsername = new System.Windows.Forms.Label();
@@ -52,8 +55,6 @@ namespace SQLiteViewer
             this.labelDeleteUser = new System.Windows.Forms.Label();
             this.comboBoxDeleteUser = new System.Windows.Forms.ComboBox();
             this.buttonDelete = new System.Windows.Forms.Button();
-            this.comboBoxRole = new System.Windows.Forms.ComboBox();
-            this.label1 = new System.Windows.Forms.Label();
             this.tabControl.SuspendLayout();
             this.tabAddUser.SuspendLayout();
             this.tabDeleteUser.SuspendLayout();
@@ -92,6 +93,23 @@ namespace SQLiteViewer
             this.tabAddUser.TabIndex = 0;
             this.tabAddUser.Text = "Добавить пользователя";
             this.tabAddUser.UseVisualStyleBackColor = true;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(20, 225);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(42, 16);
+            this.label1.TabIndex = 12;
+            this.label1.Text = "Роль:";
+            // 
+            // comboBoxRole
+            // 
+            this.comboBoxRole.FormattingEnabled = true;
+            this.comboBoxRole.Location = new System.Drawing.Point(140, 225);
+            this.comboBoxRole.Name = "comboBoxRole";
+            this.comboBoxRole.Size = new System.Drawing.Size(200, 24);
+            this.comboBoxRole.TabIndex = 11;
             // 
             // labelFullName
             // 
@@ -194,7 +212,7 @@ namespace SQLiteViewer
             this.tabDeleteUser.Location = new System.Drawing.Point(4, 25);
             this.tabDeleteUser.Name = "tabDeleteUser";
             this.tabDeleteUser.Padding = new System.Windows.Forms.Padding(3);
-            this.tabDeleteUser.Size = new System.Drawing.Size(376, 251);
+            this.tabDeleteUser.Size = new System.Drawing.Size(376, 294);
             this.tabDeleteUser.TabIndex = 1;
             this.tabDeleteUser.Text = "Удалить пользователя";
             this.tabDeleteUser.UseVisualStyleBackColor = true;
@@ -226,27 +244,11 @@ namespace SQLiteViewer
             this.buttonDelete.UseVisualStyleBackColor = true;
             this.buttonDelete.Click += new System.EventHandler(this.buttonDelete_Click);
             // 
-            // comboBoxRole
-            // 
-            this.comboBoxRole.FormattingEnabled = true;
-            this.comboBoxRole.Location = new System.Drawing.Point(140, 225);
-            this.comboBoxRole.Name = "comboBoxRole";
-            this.comboBoxRole.Size = new System.Drawing.Size(200, 24);
-            this.comboBoxRole.TabIndex = 11;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(20, 225);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(42, 16);
-            this.label1.TabIndex = 12;
-            this.label1.Text = "Роль:";
-            // 
             // UserManagementForm
             // 
             this.ClientSize = new System.Drawing.Size(384, 323);
             this.Controls.Add(this.tabControl);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "UserManagementForm";
             this.Text = "Управление пользоватеями";
             this.tabControl.ResumeLayout(false);
