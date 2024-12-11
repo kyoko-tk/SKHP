@@ -134,16 +134,15 @@ namespace SQLiteViewer
         private void ApplyAccessControl()
         {
             Logger.Log($"Текущий пользователь: {authenticatedUser.Username}");
+            разграничениеToolStripMenuItem.Visible = authenticatedUser.Role == "admin";
+            управлениеПользоватеямиToolStripMenuItem.Visible = authenticatedUser.Role == "admin";
 
             if (permissions.UserSettings.ContainsKey(authenticatedUser.Username))
             {
-                var userPermissions = permissions.UserSettings[authenticatedUser.Username];
-
+                 var userPermissions = permissions.UserSettings[authenticatedUser.Username];
                 Logger.Log($"Найдено разграничение доступа для {authenticatedUser.Username}.");
-
                 // Скрываем таблицы
                 HideTables(userPermissions.HiddenTables);
-
                 // Применяем доступ к кнопкам
                 ApplyButtonVisibility(userPermissions.ButtonVisibility);
             }
@@ -152,10 +151,10 @@ namespace SQLiteViewer
                 Logger.Log($"Разграничение доступа для {authenticatedUser.Username} не найдено.");
             }
         }
+
         private void HideTables(List<string> hiddenTables)
         {
             Logger.Log($"Скрываем таблицы для {authenticatedUser.Username}: {string.Join(", ", hiddenTables)}");
-
             foreach (TreeNode node in treeViewTables.Nodes)
             {
                 foreach (TreeNode childNode in node.Nodes)
@@ -171,11 +170,9 @@ namespace SQLiteViewer
         private void ApplyButtonVisibility(Dictionary<string, bool> buttonVisibility)
         {
             Logger.Log($"Применяем доступ к кнопкам для {authenticatedUser.Username}: {JsonConvert.SerializeObject(buttonVisibility)}");
-
             bindingNavigatorAddNewItem.Visible = buttonVisibility.TryGetValue("canAdd", out var canAdd) && canAdd;
             bindingNavigatorDelete.Visible = buttonVisibility.TryGetValue("canDelete", out var canDelete) && canDelete;
             toolStripButtonSave.Visible = buttonVisibility.TryGetValue("canSave", out var canSave) && canSave;
-
             Logger.Log("Доступ к кнопкам успешно применен.");
         }
 
@@ -185,30 +182,11 @@ namespace SQLiteViewer
             {
                 Logger.Log("Применяем скрытие таблиц...");
                 Logger.Log($"Текущий пользователь: {authenticatedUser.Username}");
-                Logger.Log("Доступные пользователи в HiddenTables: " + string.Join(", ", permissions.HiddenTables.Keys));
-                Logger.Log("Доступные пользователи в ButtonVisibility: " + string.Join(", ", permissions.ButtonVisibility.Keys));
+                Logger.Log("Доступные пользователи в UserSettings: " + string.Join(", ", permissions.UserSettings.Keys));
 
-                if (permissions.HiddenTables.ContainsKey(authenticatedUser.Username))
+                if (permissions.UserSettings.ContainsKey(authenticatedUser.Username))
                 {
-                    Logger.Log($"Найдено разграничение доступа для {authenticatedUser.Username} в HiddenTables.");
-                }
-                else
-                {
-                    Logger.Log($"Разграничение доступа для {authenticatedUser.Username} в HiddenTables не найдено.");
-                }
-
-                if (permissions.ButtonVisibility.ContainsKey(authenticatedUser.Username))
-                {
-                    Logger.Log($"Найдено разграничение доступа для {authenticatedUser.Username} в ButtonVisibility.");
-                }
-                else
-                {
-                    Logger.Log($"Разграничение доступа для {authenticatedUser.Username} в ButtonVisibility не найдено.");
-                }
-
-                if (permissions.HiddenTables.ContainsKey(authenticatedUser.Username))
-                {
-                    var hiddenTables = permissions.HiddenTables[authenticatedUser.Username];
+                    var hiddenTables = permissions.UserSettings[authenticatedUser.Username].HiddenTables;
                     Logger.Log($"Скрываем таблицы: {string.Join(", ", hiddenTables)}");
 
                     foreach (TreeNode parentNode in treeViewTables.Nodes)
@@ -223,6 +201,10 @@ namespace SQLiteViewer
                         }
                     }
                 }
+                else
+                {
+                    Logger.Log($"Разграничение доступа для {authenticatedUser.Username} не найдено.");
+                }
             }
             catch (Exception ex)
             {
@@ -233,16 +215,11 @@ namespace SQLiteViewer
 
         public class Permissions
         {
-            public Dictionary<string, List<string>> HiddenTables { get; set; }
-            public Dictionary<string, Dictionary<string, bool>> ButtonVisibility { get; set; }
-
-            private static string permissionsFilePath = "permissions.json";
             public Dictionary<string, UserPermissions> UserSettings { get; set; }
+            private static string permissionsFilePath = "permissions.json";
 
             public Permissions()
             {
-                HiddenTables = new Dictionary<string, List<string>>();
-                ButtonVisibility = new Dictionary<string, Dictionary<string, bool>>();
                 UserSettings = new Dictionary<string, UserPermissions>();
             }
 
@@ -265,16 +242,11 @@ namespace SQLiteViewer
                     var json = File.ReadAllText(permissionsFilePath);
                     try
                     {
-                        var root = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, UserPermissions>>>(json);
-
-                        if (root != null && root.ContainsKey("UserSettings"))
+                        var root = JsonConvert.DeserializeObject<Permissions>(json);
+                        if (root != null && root.UserSettings != null)
                         {
-                            return new Permissions
-                            {
-                                UserSettings = root["UserSettings"]
-                            };
+                            return root;
                         }
-
                         Logger.Log("Ошибка: JSON не содержит секции 'UserSettings'.");
                     }
                     catch (Exception ex)
@@ -288,12 +260,7 @@ namespace SQLiteViewer
 
             public void SavePermissions()
             {
-                var root = new Dictionary<string, Dictionary<string, UserPermissions>>
-        {
-            { "UserSettings", UserSettings }
-        };
-
-                var json = JsonConvert.SerializeObject(root, Formatting.Indented);
+                var json = JsonConvert.SerializeObject(this, Formatting.Indented);
                 File.WriteAllText(permissionsFilePath, json);
             }
         }
@@ -316,8 +283,8 @@ namespace SQLiteViewer
                 }
 
                 // Проверка, скрыта ли таблица для текущего пользователя
-                if (permissions.HiddenTables.ContainsKey(authenticatedUser.Username) &&
-                    permissions.HiddenTables[authenticatedUser.Username].Contains(tableName))
+                if (permissions.UserSettings.ContainsKey(authenticatedUser.Username) &&
+                    permissions.UserSettings[authenticatedUser.Username].HiddenTables.Contains(tableName))
                 {
                     // Если таблица скрыта для пользователя, прекращаем обработку
                     MessageBox.Show("У вас нет доступа к этой таблице.", "Доступ запрещен", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -1122,6 +1089,12 @@ namespace SQLiteViewer
             {
                 MessageBox.Show($"Произошла ошибка при открытии админ-панели: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void управлениеПользоватеямиToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            UserManagementForm form = new UserManagementForm();
+            form.ShowDialog();
         }
     }
 }

@@ -10,7 +10,6 @@ namespace SQLiteViewer
         private TextBox textBoxUsername;
         private TextBox textBoxPassword;
         private Button buttonLogin;
-        private Button buttonRegister;
 
         protected override void Dispose(bool disposing)
         {
@@ -28,7 +27,6 @@ namespace SQLiteViewer
             this.textBoxUsername = new System.Windows.Forms.TextBox();
             this.textBoxPassword = new System.Windows.Forms.TextBox();
             this.buttonLogin = new System.Windows.Forms.Button();
-            this.buttonRegister = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // labelUsername
@@ -66,30 +64,19 @@ namespace SQLiteViewer
             // 
             // buttonLogin
             // 
-            this.buttonLogin.Location = new System.Drawing.Point(30, 130);
+            this.buttonLogin.Location = new System.Drawing.Point(181, 130);
             this.buttonLogin.Name = "buttonLogin";
-            this.buttonLogin.Size = new System.Drawing.Size(150, 30);
+            this.buttonLogin.Size = new System.Drawing.Size(200, 30);
             this.buttonLogin.TabIndex = 4;
             this.buttonLogin.Text = "Вход";
             this.buttonLogin.UseVisualStyleBackColor = true;
             this.buttonLogin.Click += new System.EventHandler(this.ButtonLogin_Click);
-            // 
-            // buttonRegister
-            // 
-            this.buttonRegister.Location = new System.Drawing.Point(200, 130);
-            this.buttonRegister.Name = "buttonRegister";
-            this.buttonRegister.Size = new System.Drawing.Size(150, 30);
-            this.buttonRegister.TabIndex = 5;
-            this.buttonRegister.Text = "Регистрация";
-            this.buttonRegister.UseVisualStyleBackColor = true;
-            this.buttonRegister.Click += new System.EventHandler(this.ButtonRegister_Click);
             // 
             // LoginForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(445, 200);
-            this.Controls.Add(this.buttonRegister);
             this.Controls.Add(this.buttonLogin);
             this.Controls.Add(this.textBoxPassword);
             this.Controls.Add(this.textBoxUsername);

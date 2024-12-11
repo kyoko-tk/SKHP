@@ -30,6 +30,7 @@
             this.переподключитсяToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.разграничениеToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.выходToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.управлениеПользоватеямиToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripTextBox1 = new System.Windows.Forms.ToolStripTextBox();
             this.bindingNavigator = new System.Windows.Forms.BindingNavigator(this.components);
             this.bindingNavigatorAddNewItem = new System.Windows.Forms.ToolStripButton();
@@ -84,7 +85,7 @@
             dataGridViewCellStyle1.BackColor = System.Drawing.Color.White;
             dataGridViewCellStyle1.ForeColor = System.Drawing.Color.Black;
             this.dataGridView.RowsDefaultCellStyle = dataGridViewCellStyle1;
-            this.dataGridView.Size = new System.Drawing.Size(760, 500);
+            this.dataGridView.Size = new System.Drawing.Size(760, 531);
             this.dataGridView.TabIndex = 2;
             // 
             // splitContainer
@@ -133,6 +134,7 @@
             this.менюToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.переподключитсяToolStripMenuItem,
             this.разграничениеToolStripMenuItem,
+            this.управлениеПользоватеямиToolStripMenuItem,
             this.выходToolStripMenuItem1});
             this.менюToolStripMenuItem.Name = "менюToolStripMenuItem";
             this.менюToolStripMenuItem.Size = new System.Drawing.Size(65, 27);
@@ -141,23 +143,32 @@
             // переподключитсяToolStripMenuItem
             // 
             this.переподключитсяToolStripMenuItem.Name = "переподключитсяToolStripMenuItem";
-            this.переподключитсяToolStripMenuItem.Size = new System.Drawing.Size(256, 26);
+            this.переподключитсяToolStripMenuItem.Size = new System.Drawing.Size(289, 26);
             this.переподключитсяToolStripMenuItem.Text = "Переподключится";
             this.переподключитсяToolStripMenuItem.Click += new System.EventHandler(this.переподключитсяToolStripMenuItem_Click);
             // 
             // разграничениеToolStripMenuItem
             // 
             this.разграничениеToolStripMenuItem.Name = "разграничениеToolStripMenuItem";
-            this.разграничениеToolStripMenuItem.Size = new System.Drawing.Size(256, 26);
+            this.разграничениеToolStripMenuItem.Size = new System.Drawing.Size(289, 26);
             this.разграничениеToolStripMenuItem.Text = "Разграничение доступа";
+            this.разграничениеToolStripMenuItem.Visible = false;
             this.разграничениеToolStripMenuItem.Click += new System.EventHandler(this.разграничениеToolStripMenuItem_Click);
             // 
             // выходToolStripMenuItem1
             // 
             this.выходToolStripMenuItem1.Name = "выходToolStripMenuItem1";
-            this.выходToolStripMenuItem1.Size = new System.Drawing.Size(256, 26);
+            this.выходToolStripMenuItem1.Size = new System.Drawing.Size(289, 26);
             this.выходToolStripMenuItem1.Text = "Вы&ход";
             this.выходToolStripMenuItem1.Click += new System.EventHandler(this.выходToolStripMenuItem1_Click);
+            // 
+            // управлениеПользоватеямиToolStripMenuItem
+            // 
+            this.управлениеПользоватеямиToolStripMenuItem.Name = "управлениеПользоватеямиToolStripMenuItem";
+            this.управлениеПользоватеямиToolStripMenuItem.Size = new System.Drawing.Size(289, 26);
+            this.управлениеПользоватеямиToolStripMenuItem.Text = "Управление пользоватеями";
+            this.управлениеПользоватеямиToolStripMenuItem.Visible = false;
+            this.управлениеПользоватеямиToolStripMenuItem.Click += new System.EventHandler(this.управлениеПользоватеямиToolStripMenuItem_Click);
             // 
             // toolStripTextBox1
             // 
@@ -415,5 +426,6 @@
         private System.Windows.Forms.ToolStripTextBox toolStripTextBox1;
         private System.Windows.Forms.ToolStripButton toolStripSearch;
         private System.Windows.Forms.ToolStripMenuItem разграничениеToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem управлениеПользоватеямиToolStripMenuItem;
     }
 }
