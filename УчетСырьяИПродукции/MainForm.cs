@@ -82,8 +82,8 @@ namespace SQLiteViewer
 
                     var refsNode = new TreeNode("Справочники");
                     var recordsNode = new TreeNode("Документы");
+                    var reportNode = new TreeNode("Отчёты");
                     var sysInfoNode = new TreeNode("System Information");
-
                     foreach (DataRow row in tables.Rows)
                     {
                         string tableName = row["TABLE_NAME"].ToString();
@@ -109,14 +109,20 @@ namespace SQLiteViewer
                     treeViewTables.Nodes.Clear();
                     treeViewTables.Nodes.Add(refsNode);
                     treeViewTables.Nodes.Add(recordsNode);
+                    treeViewTables.Nodes.Add(reportNode);
                     if (isAdmin)
                     {
                         treeViewTables.Nodes.Add(sysInfoNode);
                     }
 
+                    reportNode.Nodes.Add(new TreeNode("Отчёт по поставкам"));
+                    reportNode.Nodes.Add("Отчёт по выбытиям");
+
                     refsNode.Expand();
                     recordsNode.Expand();
                     sysInfoNode.Expand();
+                    reportNode.Expand();
+
 
                     Logger.Log("Таблицы успешно загружены.");
                     connection.Close();
@@ -288,6 +294,22 @@ namespace SQLiteViewer
                 {
                     // Если таблица скрыта для пользователя, прекращаем обработку
                     MessageBox.Show("У вас нет доступа к этой таблице.", "Доступ запрещен", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                else if (e.Node.Parent.Text == "Отчёты")
+                {
+                    if (tableName == "Отчёт по поставкам")
+                    {
+                        // Создаем экземпляр ReportForm и передаем тип отчета "Поставки"
+                        ReportForm reportForm = new ReportForm("Поставки");
+                        reportForm.ShowDialog();  // Показываем форму отчета
+                    }
+                    else if (tableName == "Отчёт по выбытиям")
+                    {
+                        // Создаем экземпляр ReportForm и передаем тип отчета "Выбытие"
+                        ReportForm reportForm = new ReportForm("Выбытие");
+                        reportForm.ShowDialog();  // Показываем форму отчета
+                    }
                     return;
                 }
 
